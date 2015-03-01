@@ -4,13 +4,18 @@ local socket = require "socket"
 redis = require 'redis'
 
 local dump = function(v) 
-    if nil ~= v then
+	local result, ret = pcall(v)
+	if not result then
+		print("execute error: "..ret)
+		return
+	end
 	print("==============return=================")
-	print(v)
-	print("=====================================\n")
-    else
+	if ret ~= nil then
+		print(ret)	
+		print("=====================================\n")
+		return
+	end
 	print("done with non return")
-    end
 end
 
 local host = "127.0.0.1"
@@ -25,9 +30,13 @@ local redis_str = ""
 
 local f = function ()
 	print("executing script...")
-	print("=============output==================")
-	dofile(script_file)
-	print("=====================================\n")
+	local func, err = loadfile(script_file)
+	if func == nil then
+		print("script error: "..err)
+	else
+		print("=============output==================")
+		dump(func)
+	end
 end
 
 local usage = function()
@@ -76,7 +85,7 @@ elseif not client:ping() then
 	break
 else
 	local t0 = socket.gettime()
-	dump(f())
+	f()
 	local t1 = socket.gettime()
 	print("used time: "..t1-t0.."s")
 end
